@@ -17,72 +17,53 @@
 #import <Foundation/Foundation.h>
 #import <Security/SecCertificate.h>
 
-typedef NS_ENUM(NSInteger, SRReadyState) {
-    SR_CONNECTING   = 0,
-    SR_OPEN         = 1,
-    SR_CLOSING      = 2,
-    SR_CLOSED       = 3,
-};
+typedef enum {
+    XSR_CONNECTING   = 0,
+    XSR_OPEN         = 1,
+    XSR_CLOSING      = 2,
+    XSR_CLOSED       = 3,
+} XSRReadyState;
 
-typedef enum SRStatusCode : NSInteger {
-    // 0–999: Reserved and not used.
-    SRStatusCodeNormal = 1000,
-    SRStatusCodeGoingAway = 1001,
-    SRStatusCodeProtocolError = 1002,
-    SRStatusCodeUnhandledType = 1003,
+typedef enum XSRStatusCode : NSInteger {
+    XSRStatusCodeNormal = 1000,
+    XSRStatusCodeGoingAway = 1001,
+    XSRStatusCodeProtocolError = 1002,
+    XSRStatusCodeUnhandledType = 1003,
     // 1004 reserved.
-    SRStatusNoStatusReceived = 1005,
-    SRStatusCodeAbnormal = 1006,
-    SRStatusCodeInvalidUTF8 = 1007,
-    SRStatusCodePolicyViolated = 1008,
-    SRStatusCodeMessageTooBig = 1009,
-    SRStatusCodeMissingExtension = 1010,
-    SRStatusCodeInternalError = 1011,
-    SRStatusCodeServiceRestart = 1012,
-    SRStatusCodeTryAgainLater = 1013,
-    // 1014: Reserved for future use by the WebSocket standard.
-    SRStatusCodeTLSHandshake = 1015,
-    // 1016–1999: Reserved for future use by the WebSocket standard.
-    // 2000–2999: Reserved for use by WebSocket extensions.
-    // 3000–3999: Available for use by libraries and frameworks. May not be used by applications. Available for registration at the IANA via first-come, first-serve.
-    // 4000–4999: Available for use by applications.
-} SRStatusCode;
+    XSRStatusNoStatusReceived = 1005,
+    // 1004-1006 reserved.
+    XSRStatusCodeInvalidUTF8 = 1007,
+    XSRStatusCodePolicyViolated = 1008,
+    XSRStatusCodeMessageTooBig = 1009,
+} XSRStatusCode;
 
-@class SRWebSocket;
+@class XSRWebSocket;
 
-extern NSString *const SRWebSocketErrorDomain;
-extern NSString *const SRHTTPResponseErrorKey;
+extern NSString *const XSRWebSocketErrorDomain;
+extern NSString *const XSRHTTPResponseErrorKey;
 
-#pragma mark - SRWebSocketDelegate
+#pragma mark - XSRWebSocketDelegate
 
-@protocol SRWebSocketDelegate;
+@protocol XSRWebSocketDelegate;
 
-#pragma mark - SRWebSocket
+#pragma mark - XSRWebSocket
 
-@interface SRWebSocket : NSObject <NSStreamDelegate>
+@interface XSRWebSocket : NSObject <NSStreamDelegate>
 
-@property (nonatomic, weak) id <SRWebSocketDelegate> delegate;
+@property (nonatomic, weak) id <XSRWebSocketDelegate> delegate;
 
-@property (nonatomic, readonly) SRReadyState readyState;
+@property (nonatomic, readonly) XSRReadyState readyState;
 @property (nonatomic, readonly, retain) NSURL *url;
-
-
-@property (nonatomic, readonly) CFHTTPMessageRef receivedHTTPHeaders;
-
-// Optional array of cookies (NSHTTPCookie objects) to apply to the connections
-@property (nonatomic, readwrite) NSArray * requestCookies;
 
 // This returns the negotiated protocol.
 // It will be nil until after the handshake completes.
 @property (nonatomic, readonly, copy) NSString *protocol;
 
 // Protocols should be an array of strings that turn into Sec-WebSocket-Protocol.
-- (id)initWithURLRequest:(NSURLRequest *)request protocols:(NSArray *)protocols allowsUntrustedSSLCertificates:(BOOL)allowsUntrustedSSLCertificates;
 - (id)initWithURLRequest:(NSURLRequest *)request protocols:(NSArray *)protocols;
 - (id)initWithURLRequest:(NSURLRequest *)request;
 
 // Some helper constructors.
-- (id)initWithURL:(NSURL *)url protocols:(NSArray *)protocols allowsUntrustedSSLCertificates:(BOOL)allowsUntrustedSSLCertificates;
 - (id)initWithURL:(NSURL *)url protocols:(NSArray *)protocols;
 - (id)initWithURL:(NSURL *)url;
 
@@ -109,46 +90,43 @@ extern NSString *const SRHTTPResponseErrorKey;
 
 @end
 
-#pragma mark - SRWebSocketDelegate
+#pragma mark - XSRWebSocketDelegate
 
-@protocol SRWebSocketDelegate <NSObject>
+@protocol XSRWebSocketDelegate <NSObject>
 
 // message will either be an NSString if the server is using text
 // or NSData if the server is using binary.
-- (void)webSocket:(SRWebSocket *)webSocket didReceiveMessage:(id)message;
+- (void)webSocket:(XSRWebSocket *)webSocket didReceiveMessage:(id)message;
 
 @optional
 
-- (void)webSocketDidOpen:(SRWebSocket *)webSocket;
-- (void)webSocket:(SRWebSocket *)webSocket didFailWithError:(NSError *)error;
-- (void)webSocket:(SRWebSocket *)webSocket didCloseWithCode:(NSInteger)code reason:(NSString *)reason wasClean:(BOOL)wasClean;
-- (void)webSocket:(SRWebSocket *)webSocket didReceivePong:(NSData *)pongPayload;
-
-// Return YES to convert messages sent as Text to an NSString. Return NO to skip NSData -> NSString conversion for Text messages. Defaults to YES.
-- (BOOL)webSocketShouldConvertTextFrameToString:(SRWebSocket *)webSocket;
+- (void)webSocketDidOpen:(XSRWebSocket *)webSocket;
+- (void)webSocket:(XSRWebSocket *)webSocket didFailWithError:(NSError *)error;
+- (void)webSocket:(XSRWebSocket *)webSocket didCloseWithCode:(NSInteger)code reason:(NSString *)reason wasClean:(BOOL)wasClean;
+- (void)webSocket:(XSRWebSocket *)webSocket didReceivePong:(NSData *)pongPayload;
 
 @end
 
-#pragma mark - NSURLRequest (SRCertificateAdditions)
+#pragma mark - NSURLRequest (XCertificateAdditions)
 
-@interface NSURLRequest (SRCertificateAdditions)
+@interface NSURLRequest (XCertificateAdditions)
 
-@property (nonatomic, retain, readonly) NSArray *SR_SSLPinnedCertificates;
-
-@end
-
-#pragma mark - NSMutableURLRequest (SRCertificateAdditions)
-
-@interface NSMutableURLRequest (SRCertificateAdditions)
-
-@property (nonatomic, retain) NSArray *SR_SSLPinnedCertificates;
+@property (nonatomic, retain, readonly) NSArray *XSR_SSLPinnedCertificates;
 
 @end
 
-#pragma mark - NSRunLoop (SRWebSocket)
+#pragma mark - NSMutableURLRequest (XCertificateAdditions)
 
-@interface NSRunLoop (SRWebSocket)
+@interface NSMutableURLRequest (XCertificateAdditions)
 
-+ (NSRunLoop *)SR_networkRunLoop;
+@property (nonatomic, retain) NSArray *XSR_SSLPinnedCertificates;
+
+@end
+
+#pragma mark - NSRunLoop (XSRWebSocket)
+
+@interface NSRunLoop (XSRWebSocket)
+
++ (NSRunLoop *)XSR_networkRunLoop;
 
 @end
